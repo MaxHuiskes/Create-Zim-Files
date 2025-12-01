@@ -49,7 +49,7 @@ sudo ./make_zim.sh <site_url> <output_folder> <zim_title> <zim_description> <cre
 ### Example
 
 ```bash
-sudo ./make_zim.sh http://textfiles.com /media/disk2t/wikipedia/selfmade "Textfiles.com Archive" "Archived text files from textfiles.com" "textfiles.com"
+sudo ./make_zim.sh http://textfiles.com /media/disk2t/data/selfmade "Textfiles.com Archive" "Archived text files from textfiles.com" "textfiles.com"
 ```
 
 * `site_url` → website to archive
@@ -75,7 +75,6 @@ services:
       - "8080:8080"
     volumes:
       - /media/disk2t/data:/data
-      - /media/disk2t/kiwix-template:/data/kiwix-template
     command: ["--library", "/data/library.xml"]
 ```
 

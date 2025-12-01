@@ -1,0 +1,24 @@
+~$ sudo sh ./make_zim.sh https://example.com /media/disk2t/wikipedia/selfmade/example example.com 'test script' mh
+Using temporary folder: /tmp/tmp.Pj9PAQXmEQ
+Downloading website from https://example.com...
+--2025-12-01 14:13:50--  https://example.com/
+Resolving example.com (example.com)... 2600:1408:ec00:36::1736:7f31, 2600:1406:5e00:6::17ce:bc12, 2600:1406:5e00:6::17ce:bc1b, ...
+Connecting to example.com (example.com)|2600:1408:ec00:36::1736:7f31|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 513 [text/html]
+Saving to: ‘/tmp/tmp.Pj9PAQXmEQ/example.com/index.html’
+
+example.com/index.h 100%[===================>]     513  --.-KB/s    in 0s      
+
+2025-12-01 14:13:50 (141 MB/s) - ‘/tmp/tmp.Pj9PAQXmEQ/example.com/index.html’ saved [513/513]
+
+FINISHED --2025-12-01 14:13:50--
+Total wall clock time: 0.6s
+Downloaded: 1 files, 513 in 0s (141 MB/s)
+Converting links in /tmp/tmp.Pj9PAQXmEQ/example.com/index.html... nothing to do.
+Converted links in 1 files in 0 seconds.
+Creating ZIM file: /media/disk2t/wikipedia/selfmade/example/example_com.zim
+Resolve redirect
+set index
+Cleaning up temporary files...
+Done. ZIM file saved at: /media/disk2t/wikipedia/selfmade/example/example_com.zim

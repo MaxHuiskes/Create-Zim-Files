@@ -1,27 +1,29 @@
-**complete guide for setting up a portable offline server on a Raspberry Pi Zero 2 W** with Kiwix, Docker, and battery-powered Wi-Fi access:
+---
+
+# **ZIM Site Creator & Portable Offline Kiwix Server (Pi Zero 2 W)**
+
+A complete solution to **archive websites as ZIM files** and serve them offline via a **portable Kiwix server** on a Raspberry Pi Zero 2 W.
 
 ---
 
-## **Portable Offline Kiwix Server Guide (Pi Zero 2 W)**
-
-### **1. Hardware Requirements**
+## **1. Hardware Requirements**
 
 * **Raspberry Pi Zero 2 W** (512 MB RAM, quad-core ARMv7)
 * **MicroSD card** (16–32 GB for OS)
-* **External USB storage** (SSD or flash drive, recommended ≥128 GB for multiple ZIMs)
+* **External USB storage** (SSD or flash drive, ≥128 GB recommended)
 * **Power supply** or **portable battery pack**
-* **Optional:** USB OTG hub (if connecting multiple devices)
+* **Optional:** USB OTG hub
 
 ---
 
-### **2. Install Raspberry Pi OS**
+## **2. Install Raspberry Pi OS**
 
-1. Flash **Raspberry Pi OS Lite (32-bit)** to the SD card using [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+1. Flash **Raspberry Pi OS Lite (32-bit)** using [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 2. Boot Pi and enable SSH for headless setup.
 
 ---
 
-### **3. Install Docker**
+## **3. Install Docker**
 
 ```bash
 curl -fsSL https://get.docker.com | sh
@@ -30,7 +32,7 @@ sudo systemctl enable docker
 sudo reboot
 ```
 
-* Test Docker:
+Test Docker:
 
 ```bash
 docker run --rm arm32v7/alpine uname -m
@@ -40,16 +42,16 @@ docker run --rm arm32v7/alpine uname -m
 
 ---
 
-### **4. Prepare Storage**
+## **4. Prepare Storage**
 
-* Mount your external SSD/USB drive:
+* Mount external SSD/USB:
 
 ```bash
 sudo mkdir -p /media/kiwix
 sudo mount /dev/sda1 /media/kiwix
 ```
 
-* Copy your ZIM files:
+* Copy ZIM files:
 
 ```
 /media/kiwix/data
@@ -61,17 +63,42 @@ sudo mount /dev/sda1 /media/kiwix
 
 ---
 
-### **5. Generate `library.xml`**
+## **5. Create ZIM Files (Optional)**
+
+Use the **ZIM Site Creator script** to archive websites:
+
+```bash
+sudo ./make_zim.sh <site_url> <output_folder> <zim_title> <zim_description> <creator>
+```
+
+Example:
+
+```bash
+sudo ./make_zim.sh http://textfiles.com /media/kiwix/data "Textfiles.com Archive" "Archived text files from textfiles.com" "textfiles.com"
+```
+
+* Only the `.zim` file will remain; temporary files are removed automatically.
+
+---
+
+## **6. Generate `library.xml`**
 
 ```bash
 sudo kiwix-manage /media/kiwix/data/library.xml add /media/kiwix/data/*.zim --zimPathToSave=/data
 ```
 
+* Updates the library to include all ZIM files.
+* Verify content:
+
+```bash
+kiwix-manage /media/kiwix/data/library.xml show
+```
+
 ---
 
-### **6. Docker Compose for Kiwix**
+## **7. Docker Compose Setup**
 
-Create `docker-compose.yml` on the Pi:
+Create `docker-compose.yml`:
 
 ```yaml
 version: "3.8"
@@ -89,13 +116,13 @@ services:
       - "/data/library.xml"
 ```
 
-Start the server:
+Start server:
 
 ```bash
 docker-compose up -d
 ```
 
-Access it via browser on your local network:
+Access via browser on local network:
 
 ```
 http://<pi_ip>:8080
@@ -103,20 +130,26 @@ http://<pi_ip>:8080
 
 ---
 
-### **7. Optional: Portable Wi-Fi Hotspot**
+## **8. Optional: Battery-Powered Wi-Fi Hotspot**
 
-1. Install hostapd and dnsmasq:
+1. Install hotspot tools:
 
 ```bash
 sudo apt install hostapd dnsmasq
-sudo systemctl stop hostapd
-sudo systemctl stop dnsmasq
+sudo systemctl stop hostapd dnsmasq
 ```
 
-2. Configure `/etc/dhcpcd.conf` to assign static IP to Wi-Fi.
-3. Configure `/etc/hostapd/hostapd.conf`:
+2. Configure static IP (`/etc/dhcpcd.conf`):
 
+```text
+interface wlan0
+static ip_address=192.168.4.1/24
+nohook wpa_supplicant
 ```
+
+3. Configure hostapd (`/etc/hostapd/hostapd.conf`):
+
+```text
 interface=wlan0
 ssid=OfflineServer
 hw_mode=g
@@ -138,20 +171,22 @@ sudo systemctl start hostapd
 sudo systemctl start dnsmasq
 ```
 
----
-
-### **8. Usage**
-
-* Place ZIM files in `/media/kiwix/data/`.
-* Update `library.xml` using `kiwix-manage` after adding new ZIMs.
-* Access via browser on `http://OfflineServer:8080` (if hotspot is active) or local network IP.
+* Connect devices to Wi-Fi and access server at `http://192.168.4.1:8080`.
 
 ---
 
-### **9. Notes**
+## **9. Usage Tips**
 
-* **Memory limitations:** Pi Zero 2 W struggles with huge ZIMs (Wikipedia). Smaller ZIMs like documentation, StackExchange, or self-made sites work best.
-* **Battery operation:** Use a 10,000–20,000 mAh power bank for hours of uptime.
-* **Portability:** Everything fits into a small case; Wi-Fi hotspot makes it fully offline.
+* Update `library.xml` whenever adding new ZIMs.
+* Pi Zero 2 W: use small/medium ZIMs (e.g., documentation, StackExchange, self-made sites).
+* Pi Zero 2 W struggles with large ZIMs like full Wikipedia.
+* Battery packs ≥10,000 mAh provide hours of uptime.
+* Fully portable setup: all-in-one small case with optional Wi-Fi hotspot.
+
+---
+
+## **10. License**
+
+MIT License
 
 ---

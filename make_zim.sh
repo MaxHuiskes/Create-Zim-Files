@@ -38,4 +38,7 @@ zimwriterfs "$OUTPUT_FOLDER/site" \
            --welcome="$WELCOME_PAGE" \
            --language=en
 
-echo "[3] Done. ZIM file created at $OUTPUT_FOLDER/$(basename "$OUTPUT_FOLDER").zim"
+echo "[3] Cleaning up downloaded files"
+rm -rf "$OUTPUT_FOLDER/site"
+
+echo "[4] Done. ZIM file created at $OUTPUT_FOLDER/$(basename "$OUTPUT_FOLDER").zim"

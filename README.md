@@ -86,6 +86,10 @@ Steps:
 ```bash
 kiwix-manage /media/disk2t/data/library.xml add /media/disk2t/data/*.zim
 ```
+or to also include subfolders
+``` bash
+sudo kiwix-manage /media/kiwix/data/library.xml add $(find /media/kiwix/data -type f -name "*.zim") --zimPathToSave=/data
+```
 
 3. Start:
 

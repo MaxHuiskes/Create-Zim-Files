@@ -35,7 +35,7 @@ sudo apt install wget zimwriterfs
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/zim-site-creator.git
+git clone https://github.com/MaxHuiskes/Create-Zim-Files.git
 cd zim-site-creator
 chmod +x make_zim.sh
 ```

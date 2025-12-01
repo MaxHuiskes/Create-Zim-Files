@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  kiwix:
+    image: ghcr.io/kiwix/kiwix-serve
+    container_name: kiwix
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /path/to/data:/data
+    command: ["--library", "/data/library.xml"]

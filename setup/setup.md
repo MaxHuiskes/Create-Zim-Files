@@ -1,102 +1,90 @@
-Here’s an expanded **complete guide** covering a few small devices (Raspberry Pi Zero 2 W, Pi 4, and small x86 SBCs) for setting up a portable offline Kiwix server with battery-powered Wi-Fi access:
+---
+
+# **ZIM Site Creator & Portable Offline Kiwix Server**
+
+A complete solution to **archive websites as ZIM files** and serve them offline via a **portable Kiwix server**. Works on Raspberry Pi Zero 2 W, Pi 4, and small x86 SBCs.
 
 ---
 
-# **Portable Offline Kiwix Server Guide**
+## **Overview**
 
-This guide explains how to set up a battery-powered, portable offline Kiwix server to serve ZIM files (Wikipedia, documentation, or custom sites) on different small devices.
+**ZIM Site Creator** automates:
 
----
+* Downloading a website (pages, images, assets).
+* Converting it into a ZIM file using `zimwriterfs`.
+* Cleaning up temporary files after creating the ZIM.
 
-## **1. Supported Hardware**
+**Portable Kiwix Server**:
 
-| Device                | Notes                                                |
-| --------------------- | ---------------------------------------------------- |
-| Raspberry Pi Zero 2 W | 512 MB RAM, ARMv7, lightweight, ideal for small ZIMs |
-| Raspberry Pi 4        | 2–8 GB RAM, handles large ZIMs (Wikipedia)           |
-| Odroid N2/N2+         | 2–4 GB RAM, fast CPU, small form factor              |
-| Intel NUC / x86 SBC   | Full Linux support, more storage options             |
-
-**Common peripherals:**
-
-* MicroSD card (16–32 GB for OS)
-* External SSD/USB (≥128 GB recommended)
-* Battery pack (10,000–20,000 mAh)
-* Optional: USB OTG hub
+* Serves multiple ZIM files using Docker.
+* Can run on battery-powered devices with Wi-Fi hotspot access.
+* Perfect for offline educational, research, or personal use.
 
 ---
 
-## **2. Install OS**
+## **1. Prerequisites**
 
-### Raspberry Pi:
+### For ZIM Creation
 
-1. Use [Raspberry Pi Imager](https://www.raspberrypi.com/software/) to flash **Raspberry Pi OS Lite (32-bit)**.
-2. Enable SSH (headless) if needed.
-3. Boot and login.
-
-### x86 SBCs:
-
-1. Install Ubuntu Server (20.04+ recommended).
-2. Update system:
+* Linux system (Ubuntu/Debian tested)
+* `wget`
+* `zimwriterfs` ([installation guide](https://wiki.kiwix.org/wiki/Zimwriterfs))
+* Optional: `pandoc` & `texlive-xetex` for PDF documentation
 
 ```bash
-sudo apt update && sudo apt upgrade -y
+sudo apt update
+sudo apt install wget zimwriterfs
 ```
+
+### For Portable Kiwix Server
+
+* Docker & Docker Compose
+* Optional: hostapd and dnsmasq for Wi-Fi hotspot
 
 ---
 
-## **3. Install Docker**
+## **2. ZIM Creation Script**
+
+Clone repo and make script executable:
 
 ```bash
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker pi   # Or your username
-sudo systemctl enable docker
-sudo reboot
+git clone https://github.com/MaxHuiskes/Create-Zim-Files.git
+cd Create-Zim-Files
+chmod +x make_zim.sh
 ```
 
-Test Docker:
+### Usage
 
 ```bash
-docker run --rm alpine uname -m
+sudo ./make_zim.sh <site_url> <output_folder> <zim_title> <zim_description> <creator>
 ```
 
-* Pi Zero 2 W → `armv7l`
-* Pi 4 → `aarch64`
-* x86 → `x86_64`
+### Example
+
+```bash
+sudo ./make_zim.sh http://textfiles.com /media/disk2t/data/selfmade "Textfiles.com Archive" "Archived text files from textfiles.com" "textfiles.com"
+```
+
+* After running, only the `.zim` file remains in the output folder.
 
 ---
 
-## **4. Prepare Storage**
-
-1. Mount external SSD or USB:
-
-```bash
-sudo mkdir -p /media/kiwix
-sudo mount /dev/sda1 /media/kiwix
-```
-
-2. Create data folder:
-
-```bash
-mkdir -p /media/kiwix/data
-```
-
-3. Copy ZIM files or generate new ones in `data/`.
-
----
-
-## **5. Generate `library.xml`**
+## **3. Generate `library.xml` for Kiwix**
 
 ```bash
 sudo kiwix-manage /media/kiwix/data/library.xml add /media/kiwix/data/*.zim --zimPathToSave=/data
 ```
 
-* Updates library to include all ZIMs in `/data`.
-* Use `kiwix-manage ... show` to verify.
+* Updates the library to include all ZIMs.
+* Check content:
+
+```bash
+kiwix-manage /media/kiwix/data/library.xml show
+```
 
 ---
 
-## **6. Docker Compose Setup**
+## **4. Docker Compose Setup**
 
 Create `docker-compose.yml`:
 
@@ -104,7 +92,7 @@ Create `docker-compose.yml`:
 version: "3.8"
 services:
   kiwix:
-    image: kiwix/kiwix-serve:arm32v7  # arm32 for Pi Zero 2 W
+    image: kiwix/kiwix-serve:arm32v7  # arm32 for Pi Zero 2 W, use aarch64 for Pi 4
     container_name: kiwix
     restart: unless-stopped
     ports:
@@ -122,20 +110,20 @@ Start server:
 docker-compose up -d
 ```
 
-Access via browser: `http://<device_ip>:8080`
+* Access via browser: `http://<device_ip>:8080`
 
 ---
 
-## **7. Optional: Battery-Powered Wi-Fi Hotspot**
+## **5. Optional: Battery-Powered Wi-Fi Hotspot**
 
-### Install hotspot tools:
+1. Install hotspot tools:
 
 ```bash
 sudo apt install hostapd dnsmasq
 sudo systemctl stop hostapd dnsmasq
 ```
 
-### Configure static IP (`/etc/dhcpcd.conf`):
+2. Configure static IP (`/etc/dhcpcd.conf`):
 
 ```text
 interface wlan0
@@ -143,7 +131,7 @@ static ip_address=192.168.4.1/24
 nohook wpa_supplicant
 ```
 
-### Configure hostapd (`/etc/hostapd/hostapd.conf`):
+3. Configure hostapd (`/etc/hostapd/hostapd.conf`):
 
 ```text
 interface=wlan0
@@ -160,7 +148,7 @@ wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP
 ```
 
-### Start hotspot:
+4. Start hotspot:
 
 ```bash
 sudo systemctl start hostapd
@@ -171,17 +159,40 @@ sudo systemctl start dnsmasq
 
 ---
 
-## **8. Usage Tips**
+## **6. Hardware Recommendations**
 
-* Add new ZIMs → update `library.xml` with `kiwix-manage`.
-* Smaller devices like Pi Zero 2 W: use small/medium ZIMs (DevDocs, StackExchange, self-made sites).
-* Pi 4 / x86 SBC: can serve large ZIMs (Wikipedia) smoothly.
-* Use battery packs rated ≥10,000 mAh for extended portability.
+| Device                | Notes                                         |
+| --------------------- | --------------------------------------------- |
+| Raspberry Pi Zero 2 W | 512 MB RAM, small ZIMs only                   |
+| Raspberry Pi 4        | 2–8 GB RAM, handles large ZIMs like Wikipedia |
+| Odroid N2/N2+         | Fast CPU, small form factor                   |
+| Intel NUC / x86 SBC   | Full Linux support, large storage options     |
+
+**Common peripherals**: microSD (16–32 GB), external SSD/USB (≥128 GB), battery pack (10,000–20,000 mAh), optional USB OTG hub.
 
 ---
 
-This guide covers **different hardware**, portable Wi-Fi access, and Docker-based Kiwix server setup, making it fully offline and portable.
+## **7. PDF Documentation**
+
+Generate a PDF explaining the script and workflow:
+
+```bash
+pandoc docs/explanation.md -o docs/explanation.pdf
+```
 
 ---
 
-If you want, I can also **draft a visual workflow diagram** showing: **ZIM creation → library.xml → Docker → Wi-Fi hotspot → client access**. This would make it much easier for beginners to follow. Do you want me to do that?
+## **8. Tips**
+
+* Keep ZIMs small on Pi Zero 2 W.
+* Update `library.xml` whenever adding new ZIMs.
+* Use battery packs ≥10,000 mAh for extended portability.
+* Fully offline: clients can connect via hotspot or local network.
+
+---
+
+## **License**
+
+MIT License
+
+---

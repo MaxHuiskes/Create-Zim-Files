@@ -1,34 +1,29 @@
 # ZIM Site Creator
 
-A lightweight tool to **archive websites as ZIM files** for offline browsing with [Kiwix](https://kiwix.org/).
+A lightweight tool to **archive websites as ZIM files** for offline browsing with Kiwix.
 
 ## Overview
 
 ZIM Site Creator automates:
 
-* Downloading a website with all pages, assets, and images.
-* Converting it into a ZIM file using `zimwriterfs`.
-* Cleaning up temporary files after creating the ZIM.
-
-**Purpose:**
-
-* Make any public website accessible offline.
-* Create offline libraries for personal, educational, or remote use.
-* Integrate with a Kiwix Docker stack to serve multiple ZIM files over HTTP.
+* Downloading a website with all pages and assets.
+* Converting it into a ZIM file with `zimwriterfs`.
+* Cleaning up temporary files.
 
 ## Prerequisites
 
-* Linux system (tested on Ubuntu)
+* Raspberry Pi OS / Debian / Ubuntu
 * `wget`
-* `zimwriterfs` ([installation guide](https://wiki.kiwix.org/wiki/Zimwriterfs))
-* Optional: `pandoc` & `texlive-xetex` to generate PDF documentation
+* `zimwriterfs` (included in **zim-tools**)
 
-Install dependencies (Ubuntu/Debian):
+Install dependencies on Raspberry Pi:
 
 ```bash
 sudo apt update
-sudo apt install wget zimwriterfs
+sudo apt install wget zim-tools
 ```
+
+`zimwriterfs` becomes available after installing `zim-tools`.
 
 ## Installation
 
@@ -36,7 +31,7 @@ Clone the repository:
 
 ```bash
 git clone https://github.com/MaxHuiskes/Create-Zim-Files.git
-cd zim-site-creator
+cd Create-Zim-Files
 chmod +x make_zim.sh
 ```
 
@@ -49,20 +44,25 @@ sudo ./make_zim.sh <site_url> <output_folder> <zim_title> <zim_description> <cre
 ### Example
 
 ```bash
-sudo ./make_zim.sh http://textfiles.com /media/disk2t/data/selfmade "Textfiles.com Archive" "Archived text files from textfiles.com" "textfiles.com"
+sudo ./make_zim.sh http://textfiles.com /media/disk2t/data/selfmade \
+"Textfiles.com Archive" \
+"Archived text files from textfiles.com" \
+"textfiles.com"
 ```
 
-* `site_url` → website to archive
-* `output_folder` → folder to save the `.zim` file
-* `zim_title` → ZIM file title
+Arguments:
+
+* `site_url` → website to download
+* `output_folder` → location where the `.zim` will be stored
+* `zim_title` → title inside ZIM metadata
 * `zim_description` → description metadata
-* `creator` → creator/author metadata
+* `creator` → creator metadata
 
-After running, only the `.zim` file remains in the output folder.
+The script deletes the temporary download directory and leaves only the final `.zim`.
 
-## Docker Stack Integration
+## Docker Stack Integration (Optional)
 
-You can serve ZIM files with Kiwix using Docker Compose:
+Serve the ZIM files with kiwix-serve:
 
 ```yaml
 version: "3.8"
@@ -78,22 +78,39 @@ services:
     command: ["--library", "/data/library.xml"]
 ```
 
-1. Place all `.zim` files in `/media/disk2t/wikipedia/`.
-2. Generate or update `library.xml` using `kiwix-manage`.
-3. Run the stack: `docker-compose up -d`.
-4. Access your offline library at `http://<server-ip>:8087`.
+Steps:
+
+1. Place `.zim` files in `/media/disk2t/data/`.
+2. Update `library.xml`:
+
+```bash
+kiwix-manage /media/disk2t/data/library.xml add /media/disk2t/data/*.zim
+```
+
+3. Start:
+
+```bash
+docker compose up -d
+```
+
+4. Access via:
+
+```
+http://<server-ip>:8080
+```
 
 ## Optional PDF Documentation
 
-Generate a PDF explaining the script:
+Requires pandoc + texlive:
 
 ```bash
+sudo apt install pandoc texlive-xetex
 pandoc docs/explanation.md -o docs/explanation.pdf
 ```
 
 ## Contributing
 
-Contributions welcome! Fork the repo, make changes, and submit a pull request.
+Fork → Change → Pull Request.
 
 ## License
 
